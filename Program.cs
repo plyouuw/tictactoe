@@ -86,8 +86,8 @@ namespace lekcja_gra
             public AI(ref Symbol[,] mapa, ref (int x, int y) rozmiarMapy, int delay)
             {
                 this.mapa = mapa;
-                this.RozmiarMapy = rozmiarMapy;
-                this.Delay = delay;
+                RozmiarMapy = rozmiarMapy;
+                Delay = delay;
             }
 
             private static Symbol OdwrotnySymbol(Symbol symbol)
@@ -499,7 +499,6 @@ namespace lekcja_gra
                 else
                 {
                     Random rand = new();
-                    Thread.Sleep(600);
                     x = rand.Next(RozmiarMapy.x);
                     y = rand.Next(RozmiarMapy.y);
                     while (mapa[x, y] != Symbol.Pusty)
@@ -516,7 +515,6 @@ namespace lekcja_gra
                 if((x == 0 && y == 0 && mapa[x,y] != Symbol.Pusty) || (x == -1 && y == -1))
                 {
                     Random rand = new();
-                    Thread.Sleep(600);
                     x = rand.Next(RozmiarMapy.x);
                     y = rand.Next(RozmiarMapy.y);
                     while (mapa[x, y] != Symbol.Pusty)
@@ -530,7 +528,7 @@ namespace lekcja_gra
                         Czekaj();
                     }
                 }
-                Thread.Sleep(600);
+                Thread.Sleep(Delay);
                 return (x, y);
             }
         }
@@ -983,6 +981,11 @@ namespace lekcja_gra
 
         public void Start()
         {
+            if(mapa.Length == 0)
+            {
+                PrintError("Gra nie została zainicjalizowana!");
+                return;
+            }
             Graj();
         }
     }
@@ -994,13 +997,11 @@ namespace lekcja_gra
             Engine silnik;
             try
             {
-                silnik = new(3, 3, true, true, 0);
+                silnik = new(3, 2, true, true, 500);
             }
             catch(Exception e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(e.Message);
-                Console.ResetColor();
+                PrintError(e.Message);
                 return;
             }
             silnik.Start();
