@@ -1,4 +1,5 @@
-﻿using static Toolbox;
+﻿using System;
+using static Toolbox;
 
 namespace lekcja_gra
 {
@@ -38,10 +39,11 @@ namespace lekcja_gra
         private AI bot;
 #pragma warning restore IDE0044
         private (int x, int y) RozmiarMapy;
+        private Menu.Theme styl_menu = Menu.Theme.RedArrow;
         private (Gracz pierwszy, Gracz drugi) gracze;
         private Gracz aktualny_gracz, winner;
         private (int kolko, int krzyzyk) score;
-        public Engine(int x_map, int y_map, bool czy_pierwszy_gracz_to_komputer, bool czy_drugi_gracz_to_komputer, int opoznienie_ai = 500)
+        public Engine(int x_map, int y_map, int opoznienie_ai = 500, bool czy_pierwszy_gracz_to_komputer = true, bool czy_drugi_gracz_to_komputer = true)
         {
             if(x_map < 3 || y_map < 3)
             {
@@ -665,22 +667,19 @@ namespace lekcja_gra
             return true;
         } 
 
-        private (int wiersz, int kolumna) PustePole()
-        {
-            for(int x = 0; x < RozmiarMapy.x; x++)
-            {
-                for(int y = 0; y < RozmiarMapy.y; y++)
-                {
-                    if (mapa[x, y] == Symbol.Pusty) return (x, y);
-                }
-            }
-            return (0, 0);
-        }
-
         private (int x, int y) WybierzPole()
         {
             ConsoleKey key;
-            (int wiersz, int kolumna) lokalizacja_nowa = PustePole();
+
+            (int wiersz, int kolumna) lokalizacja_nowa = (0, 0);
+            for (int x = 0; x < RozmiarMapy.x; x++)
+            {
+                for (int y = 0; y < RozmiarMapy.y; y++)
+                {
+                    if (mapa[x, y] == Symbol.Pusty) lokalizacja_nowa = (x, y);
+                }
+            }
+
             (int wiersz, int kolumna) lokalizacja_poprzednia = lokalizacja_nowa;
             while(true)
             {
@@ -794,10 +793,16 @@ namespace lekcja_gra
             return lokalizacja_nowa;
         }
 
-        
-
         private void Graj()
         {
+            for (int x = 0; x < RozmiarMapy.x; x++)
+            {
+                for (int y = 0; y < RozmiarMapy.y; y++)
+                {
+                    mapa[x, y] = Symbol.Pusty;
+
+                }
+            }
             score = (0, 0);
             while(true)
             {
@@ -850,52 +855,23 @@ namespace lekcja_gra
 
         }
 
-        public void Rysuj(bool czyTrwaRozgrywka)
+        private void Rysuj(bool czyTrwaRozgrywka)
         {
             Console.CursorVisible = false;
-
+            
             Console.SetCursorPosition(0, 0);
-            if(czyTrwaRozgrywka)
+            if (aktualny_gracz.symbol == Symbol.Kolko && czyTrwaRozgrywka)
             {
-                Console.Write("Teraz gra ");
-                if (aktualny_gracz.symbol == Symbol.Kolko)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write("Kółko\t\t");
-                    Console.ResetColor();
-                }
-                else if (aktualny_gracz.symbol == Symbol.Krzyzyk)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write("Krzyżyk\t");
-                    Console.ResetColor();
-                }
-                Console.Write($" Punkty: {score.kolko} O\t{score.krzyzyk} X");
-            } 
-            else
-            {
-                if (winner.symbol == Symbol.Kolko)
-                {
-                    Console.Write("Wygrywa ");
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write("Kółko");
-                    Console.ResetColor();
-                    Console.Write($" zdobywając {score.kolko} punktów!");
-                }
-                else if (winner.symbol == Symbol.Krzyzyk)
-                {
-                    Console.Write("Wygrywa ");
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write("Krzyżyk");
-                    Console.ResetColor();
-                    Console.Write($" zdobywając {score.krzyzyk} punktów!");
-                }
-                else if(winner.symbol == Symbol.Pusty)
-                {
-                    int wynik = (score.kolko == score.krzyzyk) ? score.kolko : -1; //w razie dziwnego błędu wynik wyniesie -1
-                    Console.Write($"Remis! Gracze uzyskali równo po {wynik} punktów!");
-                }
+                Print("Teraz gra");
+                Print("     Kółko ", ConsoleColor.Green);
             }
+            else if (aktualny_gracz.symbol == Symbol.Krzyzyk && czyTrwaRozgrywka)
+            {
+                Print("Teraz gra");
+                Print("    Krzyżyk", ConsoleColor.Red);
+            }
+            else if (!czyTrwaRozgrywka) Print("Koniec gry!\t");
+            Console.Write($"\tKółko: {score.kolko} pkt\tKrzyżyk: {score.krzyzyk} pkt");
             
             int temp_x = 1, temp_y;
             for(int x = 0; x < RozmiarMapy.x; x++)
@@ -907,65 +883,41 @@ namespace lekcja_gra
                 for (int y = 0; y < RozmiarMapy.y; y++)
                 {
                     Console.SetCursorPosition(temp_y, temp_x-1);
-                    Console.Write('|');
+                    Print('|');
                     temp_y += 2;
                     switch (mapa[x, y])
                     {
                         case Symbol.Kolko:
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write('O');
-                            Console.ResetColor();
+                            Print('O', ConsoleColor.Green);
                             break;
                         case Symbol.KolkoSelected:
-                            Console.BackgroundColor = ConsoleColor.Gray;
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write('O');
-                            Console.ResetColor();
+                            Print('O', ConsoleColor.Green, ConsoleColor.Gray);
                             break;
                         case Symbol.KolkoSolid:
-                            Console.BackgroundColor = ConsoleColor.Green;
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.Write('O');
-                            Console.ResetColor();
+                            Print('O', ConsoleColor.White, ConsoleColor.Green);
                             break;
                         case Symbol.KolkoSolidSelected:
-                            Console.BackgroundColor = ConsoleColor.Gray;
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write('O');
-                            Console.ResetColor();
+                            Print('O', ConsoleColor.Green, ConsoleColor.Gray);
                             break;
 
                         case Symbol.Krzyzyk:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write('X');
-                            Console.ResetColor();
+                            Print('X', ConsoleColor.Red);
                             break;
                         case Symbol.KrzyzykSelected:
-                            Console.BackgroundColor = ConsoleColor.Gray;
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write('X');
-                            Console.ResetColor();
+                            Print('X', ConsoleColor.Red, ConsoleColor.Gray);
                             break;
                         case Symbol.KrzyzykSolid:
-                            Console.BackgroundColor = ConsoleColor.Red;
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.Write('X');
-                            Console.ResetColor();
+                            Print('X', ConsoleColor.White, ConsoleColor.Red);
                             break;
                         case Symbol.KrzyzykSolidSelected:
-                            Console.BackgroundColor = ConsoleColor.Gray;
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write('X');
-                            Console.ResetColor();
+                            Print('X', ConsoleColor.Red, ConsoleColor.Gray);
                             break;
 
                         case Symbol.Pusty:
-                            Console.Write(' ');
+                            Print(' ');
                             break;
                         case Symbol.PustySelected:
-                            Console.BackgroundColor = ConsoleColor.DarkGray;
-                            Console.Write(' ');
-                            Console.ResetColor();
+                            Print(' ', ConsoleColor.Black, ConsoleColor.DarkGray);
                             break;
 
                     }
@@ -977,6 +929,31 @@ namespace lekcja_gra
                     Console.Write(RepeatString("+-", RozmiarMapy.y) + '+');
                 }
             }
+            if(!czyTrwaRozgrywka)
+            {
+                Print("\n");
+                if (winner.symbol == Symbol.Kolko)
+                {
+                    Print("Wygrywa ");
+                    Print("Kółko", ConsoleColor.Green);
+                    Print($" zdobywając {score.kolko} punktów!");
+                }
+                else if (winner.symbol == Symbol.Krzyzyk)
+                {
+                    Print("Wygrywa ");
+                    Print("Krzyżyk", ConsoleColor.Red);
+                    Print($" zdobywając {score.krzyzyk} punktów!");
+                }
+                else if (winner.symbol == Symbol.Pusty)
+                {
+                    int wynik = (score.kolko == score.krzyzyk) ? score.kolko : -1; //w razie dziwnego błędu wynik wyniesie -1
+                    Print($"Remis! Gracze uzyskali równo po {wynik} punktów!");
+                }
+                Print("\n\nNaciśnij ENTER, aby rozpocząć kolejną grę. \nInny dowolny przycisk kończy działanie programu.");
+                ConsoleKey read = Console.ReadKey().Key;
+                if (read == ConsoleKey.Enter) Graj();
+                Console.Clear();
+            }
         }
 
         public void Start()
@@ -986,6 +963,67 @@ namespace lekcja_gra
                 PrintError("Gra nie została zainicjalizowana!");
                 return;
             }
+            Dictionary<int, string> dict = new()
+            {
+                { 1, "Manualny" },
+                { 2, "Automat" }
+            };
+            Menu menu = new(styl_menu, dict, "Kółko i krzyżyk\n\nWybierz, tryb gracza Kółko:");
+            int choice = menu.ReadChoice();
+            if (choice == 1) gracze.pierwszy.mode = Gracz.Mode.Manual;
+            else gracze.pierwszy.mode = Gracz.Mode.Auto;
+
+            menu = new(styl_menu, dict, "Kółko i krzyżyk\n\nWybierz, tryb gracza Krzyżyk:");
+            choice = menu.ReadChoice();
+            if (choice == 1) gracze.drugi.mode = Gracz.Mode.Manual;
+            else gracze.drugi.mode = Gracz.Mode.Auto;
+
+            dict = new()
+            {
+                { 1, "Losowanie gracza, który rozpocznie" },
+                { 2, "Rozpocznij od Kółka" },
+                { 3, "Rozpocznij od Krzyżyka" }
+            };
+            menu = new(styl_menu, dict, "Kółko i krzyżyk\n\nWybierz, co chcesz zrobić:");
+            choice = menu.ReadChoice();
+            if (choice == 1)
+            {
+                Console.Clear();
+                Print("Losowanie polega na wprowadzniu przez obu graczy liczby od 0 do 100.\nGracz, który wprowadzi większą liczbę rozpoczyna rozgrywkę.\n\nWprowadzanie liczb powinno być niejawne dla obu graczy. Wynik losowania pokaże się po zakończeniu wprowadzania liczb.");
+                Czekaj();
+                while (true)
+                {
+                    Console.Clear();
+                    Print("Gracz Kółko\n");
+                    int first = ReadInt(true, "Wprowadź swoją liczbę: ", "Liczba powinna być z zakresu od 0 do 100!", 0, 100);
+                    Console.Clear();
+                    Print("Gracz Krzyżyk\n");
+                    int second = ReadInt(true, "Wprowadź swoją liczbę: ", "Liczba powinna być z zakresu od 0 do 100!", 0, 100);
+                    Console.Clear();
+                    if (first > second)
+                    {
+                        Print("Rozpocznie gracz Kółko!");
+                        aktualny_gracz = gracze.pierwszy;
+                        Czekaj();
+                        break;
+                    }
+                    else if (second > first)
+                    {
+                        Print("Rozpocznie gracz Krzyżyk!");
+                        aktualny_gracz = gracze.drugi;
+                        Czekaj();
+                        break;
+                    }
+                    else
+                    {
+                        Print("Remis! Spróbujcie ponownie!");
+                        Czekaj();
+                    }
+                }
+            }
+            else if (choice == 2) aktualny_gracz = gracze.pierwszy;
+            else aktualny_gracz = gracze.drugi;
+
             Graj();
         }
     }
@@ -997,7 +1035,7 @@ namespace lekcja_gra
             Engine silnik;
             try
             {
-                silnik = new(3, 2, true, true, 500);
+                silnik = new(3, 3);
             }
             catch(Exception e)
             {

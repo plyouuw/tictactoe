@@ -150,10 +150,11 @@ internal class Toolbox
             return index;
         }
     }
-    public static void Print(object? value) => Console.Write(value);
-    public static void Print(object? value, ConsoleColor kolor_tekstu)
+
+    public static void Print(object? value, ConsoleColor kolor_tekstu = ConsoleColor.White, ConsoleColor kolor_tla = ConsoleColor.Black)
     {
         Console.ForegroundColor = kolor_tekstu;
+        Console.BackgroundColor = kolor_tla;
         Console.Write(value);
         Console.ResetColor();
     }
